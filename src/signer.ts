@@ -1,12 +1,12 @@
-import { Bytes, createForeignCurveV2, Crypto, createEcdsaV2 } from "o1js";
+import { Bytes, createEcdsa, createForeignCurve, Crypto } from "o1js";
 
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { sha3_256 } from "@noble/hashes/sha3";
 
-export class Secp256k1 extends createForeignCurveV2(
+export class Secp256k1 extends createForeignCurve(
   Crypto.CurveParams.Secp256k1,
 ) {}
-export class Ecdsa extends createEcdsaV2(Secp256k1) {}
+export class Ecdsa extends createEcdsa(Secp256k1) {}
 export class Bytes8 extends Bytes(8) {}
 export class Bytes32 extends Bytes(32) {}
 
@@ -49,9 +49,6 @@ export class Signer {
     const r = BigInt("0x" + sig.r.toString(16));
     const s = BigInt("0x" + sig.s.toString(16));
 
-    return new Ecdsa({
-      r,
-      s,
-    });
+    return new Ecdsa({ r, s });
   }
 }

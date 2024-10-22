@@ -1,17 +1,17 @@
 import {
-  createEcdsaV2,
-  createForeignCurveV2,
+  createForeignCurve,
   Hash,
   Struct,
   ZkProgram,
   Bytes,
   UInt8,
   Crypto,
+  createEcdsa,
 } from "o1js";
 import { Signer } from "./signer";
 
-class Secp256k1 extends createForeignCurveV2(Crypto.CurveParams.Secp256k1) {}
-class Ecdsa extends createEcdsaV2(Secp256k1) {}
+class Secp256k1 extends createForeignCurve(Crypto.CurveParams.Secp256k1) {}
+export class Ecdsa extends createEcdsa(Secp256k1) {}
 class Bytes88 extends Bytes(88) {}
 
 export function hashToScalar(hash: Bytes) {
@@ -39,7 +39,7 @@ export class SignedBytes88 extends Struct({
   verifySign(publicKey: Secp256k1) {
     const hash = Hash.SHA3_256.hash(this.payload);
     const aff = hashToScalar(hash);
-    const isValid = this.signature.verifySignedHashV2(aff, publicKey);
+    const isValid = this.signature.verifySignedHash(aff, publicKey);
     isValid.assertTrue("signature validation failed");
   }
 }
