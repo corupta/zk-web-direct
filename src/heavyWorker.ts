@@ -1,7 +1,7 @@
 import { pipelineHeavy } from "./heavyZk";
 
 function log(msg: string) {
-  console.log(msg);
+  self.postMessage(msg);
 }
 
 self.onmessage = async (e) => {
