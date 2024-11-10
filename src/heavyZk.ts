@@ -9,6 +9,8 @@ import {
   createEcdsa,
 } from "o1js";
 import { Signer } from "./signer";
+import { FileCache } from "./fileCache";
+// import { MemoryCache } from "./memoryCache";
 
 class Secp256k1 extends createForeignCurve(Crypto.CurveParams.Secp256k1) {}
 export class Ecdsa extends createEcdsa(Secp256k1) {}
@@ -59,7 +61,31 @@ export const ZkVerifySign = ZkProgram({
   },
 });
 
+
+
 export async function pipelineHeavy(log: (message: string) => void) {
+  const cache = new FileCache(log);
+  // const cache = new MemoryCache();
+  // window.cache = cache;
+  log("compiling");
+  await ZkVerifySign.compile({ cache });
+
+  log("preparing signature for verification");
+  const signer = new Signer();
+  const payload = new Uint8Array(88);
+  payload[0] = 1;
+  const signature = signer.sign(payload);
+  const input = new SignedBytes88({
+    payload: Bytes.from(payload),
+    signature,
+  });
+
+  log("proving");
+  await ZkVerifySign.verifySign(signer.pubO1, input);
+  log("proved");
+}
+
+export async function pipelineHeavy2(log: (message: string) => void) {
   log("compiling");
   await ZkVerifySign.compile();
 

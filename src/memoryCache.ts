@@ -56,13 +56,13 @@ export class MemoryCache {
       });
     }
   }
-  public read({ persistentId, uniqueId, dataType }: CacheHeader) {
+  public read({ persistentId, uniqueId }: CacheHeader) {
     let res = this.cache.get(persistentId);
     if (!res) return;
     if (res[0] !== uniqueId) return;
     return res[1];
   }
-  public write({ persistentId, uniqueId, dataType }: CacheHeader, data: Uint8Array) {
+  public write({ persistentId, uniqueId }: CacheHeader, data: Uint8Array) {
     this.cache.set(persistentId, [uniqueId, data]);
   }
 
