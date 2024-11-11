@@ -1,32 +1,44 @@
 import { CacheHeader } from 'o1js';
+import { serializeError } from 'serialize-error';
 export type CacheDump = {
   [key: string]: string[];
 }
 
-function loadAssetAsUint8Array(url: string) {
-  const request = new XMLHttpRequest();
-  request.open("GET", url, false); // false makes it synchronous
-  request.responseType = "arraybuffer";
+function loadAssetAsUint8Array(url: string, log: (message: string) => void) {
+  try {
+    const request = new XMLHttpRequest();
+    request.open("GET", url, false); // false makes it synchronous
+    request.overrideMimeType("application/octet-stream"); // Ensures response is treated as plain text
 
-  request.send();
+    request.send();
 
-  if (request.status === 200) {
-    return new Uint8Array(request.response);
-  } else {
+    // console.log('request status is ', request.status);
+    if (request.status === 200) {
+      return new Uint8Array(request.response);
+    } else {
+      return undefined;
+    }
+  } catch (er) {
+    log('Error loading asset: ' + JSON.stringify(serializeError(er)));
     return undefined;
   }
 }
 
-function loadTextFile(url: string) {
-  const request = new XMLHttpRequest();
-  request.open("GET", url, false); // false makes it synchronous
-  request.overrideMimeType("text/plain"); // Ensures response is treated as plain text
+function loadTextFile(url: string, log: (message: string) => void) {
+  try {
+    const request = new XMLHttpRequest();
+    request.open("GET", url, false); // false makes it synchronous
+    request.overrideMimeType("text/plain"); // Ensures response is treated as plain text
 
-  request.send();
+    request.send();
 
-  if (request.status === 200) {
-    return request.responseText;
-  } else {
+    if (request.status === 200) {
+      return request.responseText;
+    } else {
+      return undefined;
+    }
+  } catch (er) {
+    log('Error loading asset: ' + JSON.stringify(serializeError(er)));
     return undefined;
   }
 }
@@ -43,18 +55,20 @@ export class FileCache {
     this.logger = logger;
   }
   public read({ persistentId, uniqueId, dataType }: CacheHeader) {
-    const currentId = loadTextFile(`${this.baseUrl}${persistentId}.header`);
+    const currentId = loadTextFile(`${this.baseUrl}${persistentId}.header`, this.logger);
     this.logger(`cache read: ${persistentId} ${uniqueId} ${dataType} read currentId ${currentId} `);
     if (!currentId) return;
     if (currentId !== uniqueId) return;
+    this.logger('uniqueId matched');
     if (dataType === 'string') {
-      let string = loadTextFile(`${this.baseUrl}${persistentId}`);
+      let string = loadTextFile(`${this.baseUrl}${persistentId}`, this.logger);
       if (!string) return;
       this.logger('cache read string');
       return new TextEncoder().encode(string);
     } else {
-      let buffer = loadAssetAsUint8Array(`${this.baseUrl}${persistentId}`);
-      if (!buffer) return;
+      this.logger('loadAssetAsUint8Array called');
+      let buffer = loadAssetAsUint8Array(`${this.baseUrl}${persistentId}`, this.logger);
+      if (!buffer) { this.logger('failed to dl buffer'); return; };
       this.logger('cache read buffer');
       return new Uint8Array(buffer);
     }

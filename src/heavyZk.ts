@@ -64,7 +64,7 @@ export const ZkVerifySign = ZkProgram({
 
 
 export async function pipelineHeavy(log: (message: string) => void) {
-  const cache = new FileCache(log);
+  const cache = new FileCache(log, "https://zk-web-direct-cache.corupta.net/caches/");
   // const cache = new MemoryCache();
   // window.cache = cache;
   log("compiling");
